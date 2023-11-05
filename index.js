@@ -19,6 +19,7 @@ async function run() {
         await client.connect();
 
         const topFoodCollection = client.db("craveDB").collection("topSellingFoods")
+        const foodsCollection = client.db("craveDB").collection("foods")
 
         app.get('/foods/top/v1', async (req, res) => {
             const cursor = await topFoodCollection.find().toArray()
@@ -31,6 +32,11 @@ async function run() {
             const result = await topFoodCollection.findOne(query);
             res.send(result);
         });
+
+        app.get('/foods', async (req, res) => {
+            const cursor = await foodsCollection.find().toArray()
+            res.send(cursor);
+        })
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
