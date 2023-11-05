@@ -29,7 +29,7 @@ async function run() {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await topFoodCollection.findOne(query);
-            res.send(result)
+            res.send(result);
         });
 
         await client.db("admin").command({ ping: 1 });
