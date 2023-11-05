@@ -33,10 +33,17 @@ async function run() {
             res.send(result);
         });
 
-        app.get('/foods', async (req, res) => {
-            const cursor = await foodsCollection.find().toArray()
+        app.get('/foods/v1', async (req, res) => {
+            const cursor = await foodsCollection.find().toArray();
             res.send(cursor);
-        })
+        });
+
+        app.get('/food/v1/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await foodsCollection.findOne(query);
+            res.send(result)
+        });
 
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -48,5 +55,6 @@ async function run() {
 run().catch(console.dir);
 
 
-app.get('/', async (req, res) => res.send('CraveCrafter Server is Running'))
+app.get('/', async (req, res) => res.send('CraveCrafter Server is Running'));
+
 app.listen(port, () => console.log('CraveCrafter Server is Running On PORT:', port));
