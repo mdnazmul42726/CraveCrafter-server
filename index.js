@@ -18,9 +18,10 @@ async function run() {
 
         await client.connect();
 
-        const topFoodCollection = client.db("craveDB").collection("topSellingFoods")
-        const foodsCollection = client.db("craveDB").collection("foods")
-        const ordersCollection = client.db("craveDB").collection("orders")
+        const topFoodCollection = client.db("craveDB").collection("topSellingFoods");
+        const foodsCollection = client.db("craveDB").collection("foods");
+        const ordersCollection = client.db("craveDB").collection("orders");
+        const blogsCollection = client.db("craveDB").collection("blogs");
 
         app.get('/foods/top/v1', async (req, res) => {
             const cursor = await topFoodCollection.find().toArray()
@@ -53,10 +54,28 @@ async function run() {
             res.send(result)
         });
 
+        app.get('/blogs/v1', async (req, res) => {
+            const cursor = await blogsCollection.find().toArray();
+            res.send(cursor)
+        });
+
+        app.get('/blog/v1/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await blogsCollection.findOne(query);
+            res.send(result);
+        });
+
         app.post('/food/order/v1', async (req, res) => {
             const orderData = req.body;
             const result = await ordersCollection.insertOne(orderData);
             res.send(result)
+        });
+
+        app.post('/add-food', async (req, res) => {
+            const newFood = req.body;
+            const result = await foodsCollection.insertOne(newFood);
+            res.send(result);
         });
 
         await client.db("admin").command({ ping: 1 });
