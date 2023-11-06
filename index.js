@@ -66,6 +66,11 @@ async function run() {
             res.send(result);
         });
 
+        app.get('/orders/v1', async (req, res) => {
+            const cursor = await ordersCollection.find().toArray();
+            res.send(cursor)
+        })
+
         app.post('/food/order/v1', async (req, res) => {
             const orderData = req.body;
             const result = await ordersCollection.insertOne(orderData);
@@ -76,6 +81,20 @@ async function run() {
             const newFood = req.body;
             const result = await foodsCollection.insertOne(newFood);
             res.send(result);
+        });
+
+        app.patch('/quantity/v1/:id', async (req, res) => {
+            const id = req.params.id;
+            const newQuantity = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: { quantity: newQuantity.quantity }
+            };
+
+            const result = await foodsCollection.updateOne(filter, updatedDoc, options);
+            res.send(result);
+
         });
 
         await client.db("admin").command({ ping: 1 });
