@@ -116,6 +116,19 @@ async function run() {
 
         });
 
+        app.patch('/food/update/:id', async (req, res) => {
+            const id = req.params.id;
+            const doc = req.body;
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: { food_category: doc.food_category, food_img_url: doc.food_img_url, food_name: doc.food_name, quantity: doc.quantity, origin: doc.origin, description: doc.description, price: doc.price }
+            };
+
+            const result = await foodsCollection.updateOne(filter, updatedDoc, options);
+            res.send(result)
+        })
+
         app.delete('/orders/delete/v1/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
