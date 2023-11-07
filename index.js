@@ -1,17 +1,35 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 require('dotenv').config()
 const app = express();
 const port = process.env.PORT || 5000;
 
-app.use(cors());
+app.use(cors({ origin: ['http://localhost:5173'], credentials: true }));
 app.use(express.json());
+app.use(cookieParser());
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.4ip7zr9.mongodb.net/?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, { serverApi: { version: ServerApiVersion.v1, strict: true, deprecationErrors: true, } });
+
+const verifyToken = (req, res, next) => {
+    const token = req.cookies.token;
+    if (!token) {
+        return res.status(401).send({ message: 'Unauthorized' })
+    };
+
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).send('Unauthorized');
+        }
+        req.user = decoded;
+        next();
+    })
+}
 
 async function run() {
     try {
@@ -23,13 +41,23 @@ async function run() {
         const ordersCollection = client.db("craveDB").collection("orders");
         const blogsCollection = client.db("craveDB").collection("blogs");
 
+        app.post('/jwt', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+            res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'none' }).send({ success: true });
+        });
+
+        app.get('/jwt/logout', async (req, res) => {
+            res.clearCookie('token').send({ success: true });
+        });
+
         app.get('/foods/top/v1', async (req, res) => {
             const cursor = await topFoodCollection.find().toArray()
             res.send(cursor)
         });
 
         app.get('/search/v1', async (req, res) => {
-            const query = {food_name: req.query.title};
+            const query = { food_name: req.query.title };
             const result = await foodsCollection.find(query).toArray();
             res.send(result)
         });
@@ -72,9 +100,13 @@ async function run() {
             res.send(result);
         });
 
-        app.get('/orders/v2', async (req, res) => {
-            console.log(req.query);
+        app.get('/orders/v2', verifyToken, async (req, res) => {
+            if (req.query.email !== req.user.email) {
+                return res.status(403).send({ message: 'Invalid Access' });
+            };
+
             let query = {}
+
             if (req.query?.email) {
                 query = { buyerEmail: req.query.email }
             };
@@ -83,7 +115,10 @@ async function run() {
             res.send(result)
         });
 
-        app.get('/foods/added/v1', async (req, res) => {
+        app.get('/foods/added/v1', verifyToken, async (req, res) => {
+            if (req.query.email !== req.user.email) {
+                return res.status(403).send({ message: 'Invalid User' })
+            }
             let query = {};
             if (req.query?.email) {
                 query = { email: req.query.email }
