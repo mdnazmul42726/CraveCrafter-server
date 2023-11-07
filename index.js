@@ -75,7 +75,17 @@ async function run() {
 
             const result = await ordersCollection.find(query).toArray();
             res.send(result)
-        })
+        });
+
+        app.get('/foods/added/v1', async (req, res) => {
+            let query = {};
+            if (req.query?.email) {
+                query = { email: req.query.email }
+            };
+
+            const result = await foodsCollection.find(query).toArray();
+            res.send(result);
+        });
 
         app.post('/food/order/v1', async (req, res) => {
             const orderData = req.body;
@@ -89,6 +99,8 @@ async function run() {
             const result = await foodsCollection.insertOne(newFood);
             res.send(result);
         });
+
+        // app.patch('/food/update/v1/:id')
 
         app.patch('/quantity/v1/:id', async (req, res) => {
             const id = req.params.id;
