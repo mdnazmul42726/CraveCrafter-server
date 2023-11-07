@@ -28,6 +28,12 @@ async function run() {
             res.send(cursor)
         });
 
+        app.get('/search/v1', async (req, res) => {
+            const query = {food_name: req.query.title};
+            const result = await foodsCollection.find(query).toArray();
+            res.send(result)
+        });
+
         app.get('/top-food/v1/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
