@@ -11,7 +11,6 @@ app.use(cors({ origin: ['https://simple-firebase-94d7f.web.app', 'https://simple
 app.use(express.json());
 app.use(cookieParser());
 
-
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.4ip7zr9.mongodb.net/?retryWrites=true&w=majority`;
 
 const client = new MongoClient(uri, { serverApi: { version: ServerApiVersion.v1, strict: true, deprecationErrors: true, } });
@@ -200,6 +199,6 @@ async function run() {
 run().catch(console.dir);
 
 
-app.get('/', async (req, res) => res.send('CraveCrafter Server is Running'));
+app.get('/', async (req, res) => res.send('CraveCrafter Server is Running. v1.0.1'));
 
 app.listen(port, () => console.log('CraveCrafter Server is Running On PORT:', port));
