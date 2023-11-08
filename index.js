@@ -19,12 +19,12 @@ const client = new MongoClient(uri, { serverApi: { version: ServerApiVersion.v1,
 const verifyToken = (req, res, next) => {
     const token = req.cookies.token;
     if (!token) {
-        return res.status(401).send({ message: 'Unauthorized' })
+        return res.status(401).send({ message: 'Unauthorized 1' })
     };
 
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         if (err) {
-            return res.status(401).send('Unauthorized');
+            return res.status(401).send('Unauthorized 2');
         }
         req.user = decoded;
         next();
@@ -36,6 +36,7 @@ async function run() {
 
         await client.connect();
 
+        const userCollection = client.db("craveDB").collection("user");
         const topFoodCollection = client.db("craveDB").collection("topSellingFoods");
         const foodsCollection = client.db("craveDB").collection("foods");
         const ordersCollection = client.db("craveDB").collection("orders");
@@ -50,6 +51,17 @@ async function run() {
         app.get('/jwt/logout', async (req, res) => {
             res.clearCookie('token').send({ success: true });
         });
+
+        app.post('/user/v1', async (req, res) => {
+            const user = req.body;
+            const result = userCollection.insertOne(user);
+            res.send(result)
+        })
+
+        app.get('/food/count/v1', async (req, res) => {
+            const count = await foodsCollection.estimatedDocumentCount();
+            res.send(count);
+        })
 
         app.get('/foods/top/v1', async (req, res) => {
             const cursor = await topFoodCollection.find().toArray()
@@ -70,8 +82,11 @@ async function run() {
         });
 
         app.get('/foods/v1', async (req, res) => {
-            const cursor = await foodsCollection.find().toArray();
-            res.send(cursor);
+            const page = parseInt(req.query.page);
+            const size = parseInt(req.query.size);
+            console.log('page', page, 'size', size);
+            const result = await foodsCollection.find().skip(page * size).limit(size).toArray();
+            res.send(result);
         });
 
         app.get('/food/v1/:id', async (req, res) => {
@@ -95,6 +110,7 @@ async function run() {
 
         app.get('/blog/v1/:id', async (req, res) => {
             const id = req.params.id;
+            console.log(id);
             const query = { _id: new ObjectId(id) };
             const result = await blogsCollection.findOne(query);
             res.send(result);
@@ -140,8 +156,6 @@ async function run() {
             const result = await foodsCollection.insertOne(newFood);
             res.send(result);
         });
-
-        // app.patch('/food/update/v1/:id')
 
         app.patch('/quantity/v1/:id', async (req, res) => {
             const id = req.params.id;
