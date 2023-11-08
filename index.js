@@ -84,7 +84,7 @@ async function run() {
         app.get('/foods/v1', async (req, res) => {
             const page = parseInt(req.query.page);
             const size = parseInt(req.query.size);
-            console.log('page', page, 'size', size);
+            // console.log('page', page, 'size', size);
             const result = await foodsCollection.find().skip(page * size).limit(size).toArray();
             res.send(result);
         });
@@ -110,7 +110,6 @@ async function run() {
 
         app.get('/blog/v1/:id', async (req, res) => {
             const id = req.params.id;
-            console.log(id);
             const query = { _id: new ObjectId(id) };
             const result = await blogsCollection.findOne(query);
             res.send(result);
